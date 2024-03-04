@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sp
 import torch
 from torch.utils.data import Dataset
+from torchvision import transforms
 from pathlib import Path
 
 
@@ -30,26 +31,31 @@ def get_sld(rf, fs, freq_L, freq_H, deltaF, blocksize, overlap_pc):
 
 class CustomDataset(Dataset):
     def __init__(self, data_folder):
-        self.input_folder = Path(data_folder)/'input'
-        self.output_folder = Path(data_folder)/'output'
-        # self.transform_input = transforms.Normalize([0,0],[0.1172,0.1172])
-        # self.transform_output = transforms.Lambda(lambda t: (t * 2) - 1)
-        self.input_file_list = sorted(os.listdir(self.input_folder))
-        self.output_file_list = sorted(os.listdir(self.output_folder))
+        data_folder = Path(data_folder)
+        self.input_folder = data_folder/'input'
+        self.output_folder = data_folder/'output'
+        self.data_file_list = sorted(os.listdir(self.input_folder))
 
     def __len__(self):
-        return len(self.input_file_list)
+        return len(self.data_file_list)
 
     def __getitem__(self, idx):
-        file_path = os.path.join(self.input_folder, self.input_file_list[idx])
-        x = np.load(file_path)
-        x = torch.Tensor(x)
+        input_path = os.path.join(self.input_folder, self.data_file_list[idx])
+        output_path = os.path.join(self.output_folder, self.data_file_list[idx])
+        sld = np.load(input_path)
+        att_ideal = np.expand_dims(np.load(output_path),axis=0)
 
-        file_path = os.path.join(self.output_folder, self.output_file_list[idx])
-        y = np.load(file_path)
-        y = torch.Tensor(y)
-        y = y.unsqueeze(0)
+        input_transforms = transforms.Compose([
+            torch.Tensor,
+            transforms.Normalize(0,1.5)
+        ])
 
-        # x = self.transform_input(x)
-        # y = self.transform_output(y)
-        return x, y
+        output_transforms = transforms.Compose([
+            torch.Tensor,
+            transforms.Normalize(1,1)
+        ])
+
+        x = input_transforms(sld)
+        y = output_transforms(att_ideal)
+
+        return x,y

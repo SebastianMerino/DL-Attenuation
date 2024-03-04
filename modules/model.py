@@ -24,9 +24,23 @@ class UNETv1(nn.Module):
             linear(emb_dim, emb_dim),
         )
 
-        self.initial_conv = conv_nd(2, in_channels, features[0], 3, padding=1)
+        # Initial convolutional layers
+        self.initial_conv_x = conv_nd(2, in_channels, features[0], 1)
+        self.initial_block_x = ResBlock(
+            channels = features[0],
+            emb_channels = emb_dim,
+            dropout = 0,
+            out_channels = features[0],
+            use_conv = False,
+            use_scale_shift_norm = True,
+            dims = 2,
+            use_checkpoint = False,
+            residual=residual,
+            group_norm=group_norm
+        )
 
-        self.initial_block = ResBlock(
+        self.initial_conv_y = conv_nd(2, out_channels, features[0], 1)
+        self.initial_block_y = ResBlock(
             channels = features[0],
             emb_channels = emb_dim,
             dropout = 0,
@@ -64,7 +78,6 @@ class UNETv1(nn.Module):
             else:
                 self.downAttention.append(nn.Identity())                
 
-
         # Up part of UNET
         self.upBlocks = nn.ModuleList()
         self.upConvs = nn.ModuleList()
@@ -100,8 +113,10 @@ class UNETv1(nn.Module):
         # y: Noisy Bmode
         time_emb = self.time_mlp(t)
 
-        x = torch.cat((x,y), dim=1)
-        x = self.initial_block(self.initial_conv(x),time_emb)
+        x = self.initial_conv_x(x)
+        x = self.initial_block_x(x, time_emb)
+        y = self.initial_conv_y(y)
+        x = x + self.initial_block_y(y, time_emb)
 
         # Convolutional layers and max-pooling
         skip_connections = []
@@ -120,6 +135,7 @@ class UNETv1(nn.Module):
             x = self.upAttention[idx](x)
 
         return self.final_block(x)
+
 
 # PositionalEncoding Source： https://github.com/lmnt-com/wavegrad/blob/master/src/wavegrad/model.py
 class PositionalEncoding(nn.Module):

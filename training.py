@@ -26,7 +26,7 @@ def main():
 
     # batch_size = 4  # 4 for testing, 16 for training
     # n_epoch = 10
-    # l_rate = 1e-5  # changing from 1e-5 to 1e-6, new lr 1e-7
+    # l_rate = 1e-5  #
     # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning\raw'
 
     # Loading Data
@@ -48,7 +48,7 @@ def main():
     )
     
     # Model and optimizer
-    nn_model = UNETv1(in_channels=81, residual=False, attention_res=[]).to(device)
+    nn_model = UNETv1(in_channels=80, residual=False, attention_res=[]).to(device)
     print("Num params: ", sum(p.numel() for p in nn_model.parameters() if p.requires_grad))
 
     optim = torch.optim.Adam(nn_model.parameters(), lr=l_rate)
