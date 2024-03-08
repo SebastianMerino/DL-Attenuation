@@ -5,10 +5,10 @@ from .nn import *
 
 class UNETv1(nn.Module):
     def __init__(
-            self, 
-            in_channels=3, 
-            out_channels=1, 
-            features=[64, 128, 256, 512], 
+            self,
+            in_channels=3,
+            out_channels=1,
+            features=[64, 128, 256, 512],
             emb_dim = 256,
             residual = True,
             attention_heads = 4,
@@ -76,7 +76,7 @@ class UNETv1(nn.Module):
                     feature*2, use_checkpoint=False, num_heads=attention_heads
                 ))
             else:
-                self.downAttention.append(nn.Identity())                
+                self.downAttention.append(nn.Identity())
 
         # Up part of UNET
         self.upBlocks = nn.ModuleList()
@@ -131,6 +131,176 @@ class UNETv1(nn.Module):
         for idx in range(len(self.upBlocks)):
             x = self.upConvs[idx](x)  # UpConvolution
             concat_skip = torch.cat((skip_connections[idx], x), dim=1)
+            x = self.upBlocks[idx](concat_skip, time_emb)  # Double convs
+            x = self.upAttention[idx](x)
+
+        return self.final_block(x)
+
+
+class UNETv2(nn.Module):
+    def __init__(
+        self,
+        in_channels=3,
+        out_channels=1,
+        features=[64, 128, 256, 512],
+        emb_dim=256,
+        residual=True,
+        attention_heads=4,
+        attention_res=[256, 512],
+        group_norm=True,
+    ):
+        super(UNETv2, self).__init__()
+
+        self.time_mlp = nn.Sequential(
+            PositionalEncoding(features[0]),
+            linear(features[0], emb_dim),
+            SiLU(),
+            linear(emb_dim, emb_dim),
+        )
+
+        # Initial convolutional layers
+        self.initial_conv_x = conv_nd(2, in_channels, features[0], 1)
+        self.initial_block_x = ResBlock(
+            channels = features[0],
+            emb_channels = emb_dim,
+            dropout = 0,
+            out_channels = features[0],
+            use_conv = False,
+            use_scale_shift_norm = True,
+            dims = 2,
+            use_checkpoint = False,
+            residual=residual,
+            group_norm=group_norm
+        )
+
+        self.initial_conv_y = conv_nd(2, out_channels, features[0], 1)
+        self.initial_block_y = ResBlock(
+            channels = features[0],
+            emb_channels = emb_dim,
+            dropout = 0,
+            out_channels = features[0],
+            use_conv = False,
+            use_scale_shift_norm = True,
+            dims = 2,
+            use_checkpoint = False,
+            residual=residual,
+            group_norm=group_norm
+        )
+
+        # Down part of UNET for X
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.downBlocksX = nn.ModuleList()
+        self.downAttentionX = nn.ModuleList()
+        for feature in features:
+            self.downBlocksX.append(
+                ResBlock(
+                    channels = feature,
+                    emb_channels = emb_dim,
+                    dropout = 0,
+                    out_channels = feature*2,
+                    use_conv = False,
+                    use_scale_shift_norm = True,
+                    dims = 2,
+                    use_checkpoint = False,
+                    residual=residual,
+                    group_norm=group_norm
+                ))
+            if feature in attention_res:
+                self.downAttentionX.append(AttentionBlock(
+                    feature*2, use_checkpoint=False, num_heads=attention_heads
+                ))
+            else:
+                self.downAttentionX.append(nn.Identity())
+
+        # Down part of UNET for Y
+        self.downBlocksY = nn.ModuleList()
+        self.downAttentionY = nn.ModuleList()
+        for feature in features:
+            self.downBlocksY.append(
+                ResBlock(
+                    channels=feature,
+                    emb_channels=emb_dim,
+                    dropout=0,
+                    out_channels=feature * 2,
+                    use_conv=False,
+                    use_scale_shift_norm=True,
+                    dims=2,
+                    use_checkpoint=False,
+                    residual=residual,
+                    group_norm=group_norm
+                ))
+            if feature in attention_res:
+                self.downAttentionY.append(AttentionBlock(
+                    feature * 2, use_checkpoint=False, num_heads=attention_heads
+                ))
+            else:
+                self.downAttentionY.append(nn.Identity())
+
+        # Up part of UNET
+        self.upBlocks = nn.ModuleList()
+        self.upConvs = nn.ModuleList()
+        self.upAttention = nn.ModuleList()
+        for feature in reversed(features):
+            self.upConvs.append(
+                nn.ConvTranspose2d(feature * 2, feature, kernel_size=2, stride=2))
+            self.upBlocks.append(
+                ResBlock(
+                    channels = feature * 3,
+                    emb_channels = emb_dim,
+                    dropout = 0,
+                    out_channels = feature,
+                    use_conv = False,
+                    use_scale_shift_norm = True,
+                    dims = 2,
+                    use_checkpoint = False,
+                    residual=residual,
+                    group_norm=group_norm
+                ))
+            if feature in attention_res:
+                self.upAttention.append(AttentionBlock(
+                    feature, use_checkpoint=False, num_heads=attention_heads
+                ))
+            else:
+                self.upAttention.append(nn.Identity())
+
+
+        self.final_block = nn.Conv2d(features[0], out_channels, kernel_size=1)
+
+    def forward(self, x, y, t):
+        # x: IQ image
+        # y: Noisy Bmode
+        time_emb = self.time_mlp(t)
+
+        # Encoder for x
+        x = self.initial_conv_x(x)
+        x = self.initial_block_x(x, time_emb)
+        skip_connectionsX = []
+        for idx in range(len(self.downBlocksX)):
+            skip_connectionsX.append(x)
+            x = self.pool(x)
+            x = self.downBlocksX[idx](x, time_emb)
+            x = self.downAttentionX[idx](x)
+
+        # Encoder for y
+        y = self.initial_conv_y(y)
+        y =  self.initial_block_y(y, time_emb)
+        skip_connectionsY = []
+        for idx in range(len(self.downBlocksY)):
+            skip_connectionsY.append(y)
+            y = self.pool(y)
+            y = self.downBlocksY[idx](y, time_emb)
+            y = self.downAttentionY[idx](y)
+
+        # Combination
+        x = x+y
+
+        # Convolutional layers and up-sampling
+        skip_connectionsX = skip_connectionsX[::-1]  # Reversing list
+        skip_connectionsY = skip_connectionsY[::-1]  # Reversing list
+        for idx in range(len(self.upBlocks)):
+            x = self.upConvs[idx](x)  # UpConvolution
+            concat_skip = torch.cat((skip_connectionsX[idx], x), dim=1)
+            concat_skip = torch.cat((skip_connectionsY[idx], concat_skip), dim=1)
             x = self.upBlocks[idx](concat_skip, time_emb)  # Double convs
             x = self.upAttention[idx](x)
 
