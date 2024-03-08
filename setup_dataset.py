@@ -5,7 +5,7 @@ import os
 import random
 import argparse
 from pathlib import Path
-from modules.dataset import get_sld
+from modules.dataset import *
 from scipy.io import loadmat
 import numpy as np
 
@@ -53,8 +53,9 @@ for file in mat_file_list:
     freq_L = 2e6; freq_H = 10e6 
     deltaF = 100e3
     overlap_pc      = 0.8
-    (z_ACS,sld) = get_sld(rf, fs, freq_L, freq_H, deltaF, blocksize, overlap_pc)
-
+    # (z_ACS,sld) = get_sld(rf, fs, freq_L, freq_H, deltaF, blocksize, overlap_pc)
+    (z_ACS,Slocal) = get_spectra(rf, fs, freq_L, freq_H, deltaF, blocksize, overlap_pc)
+    logS = 10*np.log10(Slocal)
 
     alpha_back = data_dict['alpha_mean'][0,0]
     alpha_inc = data_dict['alpha_mean'][0,1]
@@ -69,9 +70,9 @@ for file in mat_file_list:
     att_ideal[inc] = alpha_inc
 
     if file in testing_files:
-        np.save(test_folder/'input'/f'{id:05d}',sld)
+        np.save(test_folder/'input'/f'{id:05d}',logS)
         np.save(test_folder/'output'/f'{id:05d}',att_ideal)
     else:
-        np.save(train_folder/'input'/f'{id:05d}',sld)
+        np.save(train_folder/'input'/f'{id:05d}',logS)
         np.save(train_folder/'output'/f'{id:05d}',att_ideal)
     id += 1
