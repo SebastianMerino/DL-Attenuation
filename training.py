@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from datetime import datetime
 import torch.nn.functional as func
 import modules.guided_diffusion as gd
-from modules.dataset import CustomDataset
+from modules.dataset import SpectrumDataset
 from modules.model import UNETv1
 
 def main():
@@ -27,10 +27,10 @@ def main():
     # batch_size = 4  # 4 for testing, 16 for training
     # n_epoch = 10
     # l_rate = 1e-5  #
-    # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning\raw'
+    # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning'
 
     # Loading Data
-    dataset = CustomDataset(data_folder/'train')
+    dataset = SpectrumDataset(data_folder/'train')
     print(f'Dataset length: {len(dataset)}')
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     print(f'Dataloader length: {len(train_loader)}')
