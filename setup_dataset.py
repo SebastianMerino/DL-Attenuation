@@ -59,12 +59,13 @@ for file in mat_file_list:
 
     alpha_back = data_dict['alpha_mean'][0,0]
     alpha_inc = data_dict['alpha_mean'][0,1]
-    cx = data_dict['center_meters'][0,0]*100 + x_offset
-    cz = data_dict['center_meters'][0,1]*100
-    r = data_dict['radius_meters'][0,0]*100
+    cx = data_dict['center_meters'][0,0] * 100 + x_offset
+    cz = data_dict['center_meters'][0,1] * 100
+    rx = data_dict['radius_meters'][0,0] * 100
+    rz = data_dict['radius_meters'][0,1] * 100
 
     xv, zv = np.meshgrid(x, z_ACS, indexing='xy')
-    inc = ((xv - cx)**2 + (zv - cz)**2) < r**2
+    inc = ((xv - cx)/rx)**2 + ((zv - cz)/rz)**2 < 1
 
     att_ideal = np.ones(xv.shape)*alpha_back
     att_ideal[inc] = alpha_inc
