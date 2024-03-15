@@ -13,7 +13,7 @@ from modules.model import UNETv3
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights'/'v3'
+    save_dir = Path(os.getcwd())/'weights'/'v3C'
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
@@ -48,7 +48,7 @@ def main():
     )
     
     # Model and optimizer
-    nn_model = UNETv3(in_channels=80, residual=False, attention_res=[]).to(device)
+    nn_model = UNETv3(in_channels=80, residual=True).to(device)
     print("Num params: ", sum(p.numel() for p in nn_model.parameters() if p.requires_grad))
 
     optim = torch.optim.Adam(nn_model.parameters(), lr=l_rate)
