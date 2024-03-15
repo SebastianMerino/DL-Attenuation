@@ -29,7 +29,7 @@ def main():
 
     # Sampling
     diffusion = create_gaussian_diffusion()
-    y_predicted = diffusion.p_sample_loop(model, y_sample.shape, x_sample, progress=True, clip_denoised=True)
+    y_predicted = diffusion.p_sample_loop(model, y_sample.shape, x_sample, progress=False, clip_denoised=True)
 
     # Saving
     save_folder = test_folder/'predicted'
