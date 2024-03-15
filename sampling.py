@@ -19,6 +19,8 @@ def main():
     BATCH_SIZE = 4
     dataloader = DataLoader(data, batch_size=BATCH_SIZE, shuffle=False)
     (x_sample,y_sample) = next(iter(dataloader))
+    x_sample = x_sample.to(device)
+    y_sample = y_sample.to(device)
 
     # Loading model
     weights_dir = Path(os.getcwd())/'weights'/'v3'
@@ -29,7 +31,7 @@ def main():
 
     # Sampling
     diffusion = create_gaussian_diffusion()
-    y_predicted = diffusion.p_sample_loop(model, y_sample.shape, x_sample, progress=False, clip_denoised=True)
+    y_predicted = diffusion.p_sample_loop(model, y_sample.shape, x_sample, progress=True, clip_denoised=True)
 
     # Saving
     save_folder = test_folder/'predicted'
