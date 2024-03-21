@@ -73,6 +73,7 @@ class CustomDataset(Dataset):
         self.input_folder = data_folder/'input'
         self.output_folder = data_folder/'output'
         self.data_file_list = sorted(os.listdir(self.input_folder))
+        self.get_sld = get_sld
 
     def __len__(self):
         return len(self.data_file_list)
@@ -81,7 +82,7 @@ class CustomDataset(Dataset):
         input_path = os.path.join(self.input_folder, self.data_file_list[idx])
         output_path = os.path.join(self.output_folder, self.data_file_list[idx])
         
-        if get_sld:
+        if self.get_sld:
             x = loadmat(input_path)['sld']
         else:
             x = loadmat(input_path)['spectrum']
