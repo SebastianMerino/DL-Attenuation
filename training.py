@@ -7,15 +7,15 @@ from torch.utils.data import DataLoader
 from datetime import datetime
 import torch.nn.functional as func
 import modules.guided_diffusion as gd
-from modules.dataset import SpectrumDataset
-from modules.model import UNETv3
+from modules.dataset import CustomDataset
+from modules.model import UNETv2
 
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights'/'v3C'
+    save_dir = Path(os.getcwd())/'weights_new'/'v2'
     if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
 
     args = get_args()
     # training hyperparameters
@@ -30,7 +30,7 @@ def main():
     # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning'
 
     # Loading Data
-    dataset = SpectrumDataset(data_folder/'train')
+    dataset = CustomDataset(data_folder/'train')
     print(f'Dataset length: {len(dataset)}')
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     print(f'Dataloader length: {len(train_loader)}')
@@ -48,7 +48,7 @@ def main():
     )
     
     # Model and optimizer
-    nn_model = UNETv3(in_channels=80, residual=True).to(device)
+    nn_model = UNETv2(in_channels=80, residual=False, attention_res=[]).to(device)
     print("Num params: ", sum(p.numel() for p in nn_model.parameters() if p.requires_grad))
 
     optim = torch.optim.Adam(nn_model.parameters(), lr=l_rate)
@@ -76,8 +76,17 @@ def main():
             t = torch.randint(0, time_steps, (x.shape[0],)).to(device)
             y_pert = diffusion.q_sample(y, t, noise)
             
-            # use network to recover noise
-            predicted_noise = nn_model(x, y_pert, t)
+            # Padding and UNET
+            (b, c, m, n) = x.shape
+            pad_m = (m // 16 + 1) * 16 - m
+            pad_n = (n // 16 + 1) * 16 - n
+            x_pad = torch.cat((x, torch.zeros(b, c, pad_m, n)), dim=2)
+            x_pad = torch.cat((x_pad, torch.zeros(b, c, m + pad_m, pad_n)), dim=3)
+            y_pad = torch.cat((y_pert, torch.zeros(b, 1, pad_m, n)), dim=2)
+            y_pad = torch.cat((y_pad, torch.zeros(b, 1, m + pad_m, pad_n)), dim=3)
+
+            predicted_noise = nn_model(x_pad, y_pad, t)
+            predicted_noise = predicted_noise[:, :, :m, :n]
 
             # loss is mean squared error between the predicted and true noise
             loss = func.mse_loss(predicted_noise, noise)

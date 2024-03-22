@@ -27,7 +27,7 @@ def get_spectra(rf, fs, freq_L, freq_H, deltaF, blocksize, overlap_pc):
     nz = 2*int(blocksize*wl/dz /2 ); # Window size
 
     f,t,spgram = spectrogram(rf, fs=fs, window=('tukey', 0.25), nperseg=nz, noverlap=nz-wz, nfft=nFFT, axis=0)
-    spgram.shape
+    # spgram.shape
     rang = np.squeeze((f > freq_L) & (f < freq_H))
     Slocal = spgram[rang,:,:]
     Slocal = np.moveaxis(Slocal, [1, 2], [2, 1])
@@ -66,12 +66,13 @@ class SpectrumDataset(Dataset):
         y = output_transforms(att_ideal)
 
         return x,y
-    
+
+
 class CustomDataset(Dataset):
     def __init__(self, data_folder, get_sld=True):
         data_folder = Path(data_folder)
-        self.input_folder = data_folder/'input'
-        self.output_folder = data_folder/'output'
+        self.input_folder = data_folder / 'input'
+        self.output_folder = data_folder / 'output'
         self.data_file_list = sorted(os.listdir(self.input_folder))
         self.get_sld = get_sld
 
@@ -81,23 +82,24 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx):
         input_path = os.path.join(self.input_folder, self.data_file_list[idx])
         output_path = os.path.join(self.output_folder, self.data_file_list[idx])
-        
+
         if self.get_sld:
             x = loadmat(input_path)['sld']
         else:
             x = loadmat(input_path)['spectrum']
-            
-        y = np.expand_dims(loadmat(output_path)['acs'],axis=0)
-        
-        # input_transforms = transforms.Compose([
-            # torch.Tensor,
-            # transforms.Normalize(0,1.5)
-        # ])
-        # output_transforms = transforms.Compose([
-            # torch.Tensor,
-            # transforms.Normalize(1,1)
-        # ])
-        # x = input_transforms(x)
-        # y = output_transforms(y)
 
-        return x,y
+        x = np.moveaxis(x, [0, 1, 2], [1, 2, 0])
+        y = np.expand_dims(loadmat(output_path)['acs'], axis=0)
+
+        input_transforms = transforms.Compose([
+            torch.Tensor,
+            transforms.Normalize(0.354, 1.079)
+        ])
+        output_transforms = transforms.Compose([
+            torch.Tensor,
+            transforms.Normalize(0.95, 0.17)
+        ])
+        x = input_transforms(x)
+        y = output_transforms(y)
+
+        return x, y
