@@ -75,7 +75,7 @@ p = length(f);
 %% Generating Diffraction compensation
 % Generating references
 referenceAtt = 0.5;
-att_ref = referenceAtt*(f.^1.05)/(20*log10(exp(1)));
+att_ref = referenceAtt*f/(20*log10(exp(1)));
 att_ref_map = zeros(m,n,p);
 for jj=1:n
     for ii=1:m
@@ -142,13 +142,13 @@ for iFile = 1:length(files)
     sam1 = out.rf(ind_z,ind_x);
     
     % Ideal attenuation
-    cx = center_meters(1) * 100 + x_offset;
-    cz = center_meters(2) * 100;
-    rx = radius_meters(1) * 100;
-    rz = radius_meters(2) * 100;
+    cx = out.center_meters(1) * 100 + x_offset;
+    cz = out.center_meters(2) * 100;
+    rx = out.radius_meters(1) * 100;
+    rz = out.radius_meters(2) * 100;
     inc = ((X - cx)/rx).^2 + ((Z - cz)/rz).^2 < 1;
-    att_ideal = ones(size(X))*alpha_mean(1);
-    att_ideal(inc) = alpha_mean(2);
+    att_ideal = ones(size(X))*out.alpha_mean(1);
+    att_ideal(inc) = out.alpha_mean(2);
     
     % Spectrum and block ACS
     for jj=1:n
@@ -171,6 +171,8 @@ for iFile = 1:length(files)
     end
     sld = (log(Sp) - log(Sd)) - (compensation);
     spectrum = (log(Sp) + log(Sd))/2;
+    % figure,imagesc(x_ACS,z_ACS,acs), axis image
+    % figure,imagesc(x_ACS,z_ACS,spectrum(:,:,end-10)), axis image
     
     file_name = files(iFile).name;
     if iFile <= num_test
