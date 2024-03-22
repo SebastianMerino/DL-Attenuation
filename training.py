@@ -80,10 +80,10 @@ def main():
             (b, c, m, n) = x.shape
             pad_m = (m // 16 + 1) * 16 - m
             pad_n = (n // 16 + 1) * 16 - n
-            x_pad = torch.cat((x, torch.zeros(b, c, pad_m, n)), dim=2)
-            x_pad = torch.cat((x_pad, torch.zeros(b, c, m + pad_m, pad_n)), dim=3)
-            y_pad = torch.cat((y_pert, torch.zeros(b, 1, pad_m, n)), dim=2)
-            y_pad = torch.cat((y_pad, torch.zeros(b, 1, m + pad_m, pad_n)), dim=3)
+            x_pad = torch.cat((x, torch.zeros((b, c, pad_m, n), device=device)), dim=2)
+            x_pad = torch.cat((x_pad, torch.zeros((b, c, m + pad_m, pad_n),device=device)), dim=3)
+            y_pad = torch.cat((y_pert, torch.zeros((b, 1, pad_m, n), device=device)), dim=2)
+            y_pad = torch.cat((y_pad, torch.zeros((b, 1, m + pad_m, pad_n),device=device)), dim=3)
 
             predicted_noise = nn_model(x_pad, y_pad, t)
             predicted_noise = predicted_noise[:, :, :m, :n]
