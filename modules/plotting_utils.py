@@ -5,7 +5,8 @@ from matplotlib.animation import FuncAnimation
 
 def show_tensor_image(image):
     reverse_transforms = transforms.Compose([
-        transforms.Lambda(lambda t: (t + 1)),
+        # transforms.Lambda(lambda t: (t + 1)),
+        transforms.Lambda(lambda t: (t*0.17 + 0.95)),
         transforms.Lambda(lambda t: t.permute(1, 2, 0)), # CHW to HWC
         # transforms.Lambda(lambda t: (t * 60) - 60.),
         transforms.Lambda(lambda t: t.numpy())
@@ -13,7 +14,9 @@ def show_tensor_image(image):
     # Take first image of batch
     if len(image.shape) == 4:
         image = image[0, :, :, :]
-    plt.imshow(reverse_transforms(image), cmap='turbo', extent=(-1.845, 1.845, 3.751, 0.128))
+    extent_ACS = (-1.755, 1.785, 3.7614375, 0.1783125)
+    # extent_ACS = (-1.845, 1.845, 3.751, 0.128)
+    plt.imshow(reverse_transforms(image), cmap='turbo', extent=extent_ACS)
     plt.clim(0,2)
 
 def show_reverse_process(intermediate):
