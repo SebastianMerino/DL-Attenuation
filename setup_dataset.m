@@ -3,8 +3,8 @@ function [] = setup_dataset(baseDir)
 % baseDir = 'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning\';
 rawDir = fullfile(baseDir,'raw');
 refDir = fullfile(baseDir,'ref');
-trainDir = fullfile(baseDir,'train');
-testDir = fullfile(baseDir,'test');
+trainDir = fullfile(baseDir,'train_BS20');
+testDir = fullfile(baseDir,'test_BS20');
 
 [~, ~, ~] = mkdir(trainDir);
 [~, ~, ~] = mkdir(fullfile(trainDir,'input'));
@@ -16,7 +16,7 @@ testDir = fullfile(baseDir,'test');
 files = dir(fullfile(rawDir,'*.mat'));
 
 %%
-blocksize = 10;     % Block size in wavelengths
+blocksize = 20;     % Block size in wavelengths
 freq_L = 2e6; freq_H = 10e6;
 freq_C = mean([freq_L freq_H]);
 deltaF = 100E3;
