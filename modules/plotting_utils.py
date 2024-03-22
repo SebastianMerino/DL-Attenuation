@@ -3,7 +3,7 @@ from IPython.display import HTML
 from torchvision import transforms
 from matplotlib.animation import FuncAnimation
 
-def show_tensor_image(image):
+def show_tensor_image(image, vmin=0.2, vmax=1.6):
     reverse_transforms = transforms.Compose([
         # transforms.Lambda(lambda t: (t + 1)),
         transforms.Lambda(lambda t: (t*0.17 + 0.95)),
@@ -17,7 +17,7 @@ def show_tensor_image(image):
     extent_ACS = (-1.755, 1.785, 3.7614375, 0.1783125)
     # extent_ACS = (-1.845, 1.845, 3.751, 0.128)
     plt.imshow(reverse_transforms(image), cmap='turbo', extent=extent_ACS)
-    plt.clim(0,2)
+    plt.clim(vmin,vmax)
 
 def show_reverse_process(intermediate):
     """ Shows a list of tensors from the sampling process """

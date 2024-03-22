@@ -13,7 +13,7 @@ from modules.model import UNETv2
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights_cosine'/'v2'
+    save_dir = Path(os.getcwd())/'weights_BS20'/'v2'
     if not os.path.exists(save_dir):
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -30,7 +30,7 @@ def main():
     # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning'
 
     # Loading Data
-    dataset = CustomDataset(data_folder/'train')
+    dataset = CustomDataset(data_folder/'train_BS20')
     print(f'Dataset length: {len(dataset)}')
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     print(f'Dataloader length: {len(train_loader)}')
@@ -96,9 +96,9 @@ def main():
             loss_arr.append(loss.item())
             optim.step()
 
-        print(f' Epoch {ep:03}/{n_epoch}, loss: {loss_arr[-1]:.2f}, {datetime.now()}')
+        print(f' Epoch {ep:03}/{n_epoch}, loss: {loss_arr[-1]:.3f}, {datetime.now()}')
         # save model every x epochs
-        if ep % 5 == 0 or ep == int(n_epoch):
+        if ep % 10 == 0 or ep == int(n_epoch):
             torch.save(nn_model.state_dict(), save_dir/f"model_{ep}.pth")
             np.save(save_dir/f"loss_{ep}.npy", np.array(loss_arr))
 
