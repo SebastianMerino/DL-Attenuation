@@ -89,7 +89,7 @@ windowing = hamming(nz/2);
 windowing = windowing*ones(1,nx);
 
 % For looping
-refFiles = dir([refDir,'\*.mat']);
+refFiles =dir(fullfile(refDir,'*.mat'));
 Nref = length(refFiles);
 % swrap = saran_wrap(band); % Correction factor for phantom data
 swrap = 0;
@@ -97,7 +97,7 @@ swrap = 0;
 Sp_ref = zeros(m,n,p,Nref);
 Sd_ref = zeros(m,n,p,Nref);
 for iRef = 1:Nref
-    out = load([refDir,'\',refFiles(iRef).name]);
+    out = load(fullfile(refDir,refFiles(iRef).name));
     samRef = out.rf;
     samRef = samRef(ind_z,ind_x); % Cropping
     % figure,imagesc(db(hilbert(samRef)))
