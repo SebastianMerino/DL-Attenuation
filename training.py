@@ -22,6 +22,10 @@ def main():
     batch_size = args.bs
     n_epoch = args.epochs
     l_rate = args.lr
+    if args.save == None:
+        save_epochs = 10
+    else:
+        save_epochs = args.save
     data_folder = Path(args.data_folder)
 
     # batch_size = 4  # 4 for testing, 16 for training
@@ -98,7 +102,7 @@ def main():
 
         print(f' Epoch {ep:03}/{n_epoch}, loss: {loss_arr[-1]:.3f}, {datetime.now()}')
         # save model every x epochs
-        if ep % 10 == 0 or ep == int(n_epoch):
+        if ep % save_epochs == 0 or ep == int(n_epoch):
             torch.save(nn_model.state_dict(), save_dir/f"model_{ep}.pth")
             np.save(save_dir/f"loss_{ep}.npy", np.array(loss_arr))
 
@@ -108,6 +112,8 @@ def get_args():
     parser.add_argument('bs', type=int, help='batch size')
     parser.add_argument('epochs', type=int, help='number of epochs')
     parser.add_argument('lr', type=float, help='learning rate')
+    parser.add_argument('-s', '--save', nargs='?', type=int, help='number of epochs to save', default=10)
+
     return parser.parse_args() 
 
 
