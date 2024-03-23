@@ -13,7 +13,7 @@ from modules.model import UNETv2
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights_BS20'/'v2'
+    save_dir = Path(os.getcwd())/'weights_overfit'/'v2'
     if not os.path.exists(save_dir):
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -34,7 +34,7 @@ def main():
     # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning'
 
     # Loading Data
-    dataset = CustomDataset(data_folder/'train_BS20')
+    dataset = CustomDataset(data_folder/'train')
     print(f'Dataset length: {len(dataset)}')
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     print(f'Dataloader length: {len(train_loader)}')
