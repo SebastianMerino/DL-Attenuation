@@ -22,7 +22,7 @@ def show_tensor_image(image, vmin=0.2, vmax=1.6):
 def show_reverse_process(intermediate):
     """ Shows a list of tensors from the sampling process """
     num_intermediate = len(intermediate)
-    plt.figure(figsize=(15,2))
+    plt.figure(figsize=(16,2))
     plt.axis('off')
     for id, y_gen in enumerate(intermediate):
         plt.subplot(1, num_intermediate, id+1)

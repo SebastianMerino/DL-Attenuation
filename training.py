@@ -34,7 +34,7 @@ def main():
     # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning'
 
     # Loading Data
-    dataset = CustomDataset(data_folder/'train')
+    dataset = CustomDataset(data_folder/'train_overfit')
     print(f'Dataset length: {len(dataset)}')
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     print(f'Dataloader length: {len(train_loader)}')
