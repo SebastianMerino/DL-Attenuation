@@ -3,10 +3,10 @@ from IPython.display import HTML
 from torchvision import transforms
 from matplotlib.animation import FuncAnimation
 
-def show_tensor_image(image, vmin=0.2, vmax=1.6):
+def show_tensor_image(image, vmin=0.4, vmax=1.4):
     reverse_transforms = transforms.Compose([
         # transforms.Lambda(lambda t: (t + 1)),
-        transforms.Lambda(lambda t: (t*0.17 + 0.95)),
+        transforms.Lambda(lambda t: (t*0.5 + 0.9)),
         transforms.Lambda(lambda t: t.permute(1, 2, 0)), # CHW to HWC
         # transforms.Lambda(lambda t: (t * 60) - 60.),
         transforms.Lambda(lambda t: t.numpy())

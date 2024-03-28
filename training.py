@@ -57,7 +57,7 @@ def main():
 
     optim = torch.optim.Adam(nn_model.parameters(), lr=l_rate)
 
-    trained_epochs = 0
+    trained_epochs = 20000
     if trained_epochs > 0:
         nn_model.load_state_dict(torch.load(save_dir/f"model_{trained_epochs}.pth", map_location=device))  # From last model
         loss_arr = np.load(save_dir/f"loss_{trained_epochs}.npy").tolist()  # From last model
