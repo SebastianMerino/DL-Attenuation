@@ -97,7 +97,7 @@ class CustomDataset(Dataset):
         ])
         output_transforms = transforms.Compose([
             torch.Tensor,
-            transforms.Normalize(0.95, 0.17)
+            transforms.Normalize((0.4 + 1.4) / 2, (1.4 - 0.4) / 2)
         ])
         x = input_transforms(x)
         y = output_transforms(y)
