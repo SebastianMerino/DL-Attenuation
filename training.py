@@ -13,7 +13,7 @@ from modules.model import UNETv2
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights_overfit_test'/'v2'
+    save_dir = Path(os.getcwd())/'weights_overfit'/'steps4k'
     if not os.path.exists(save_dir):
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -22,16 +22,8 @@ def main():
     batch_size = args.bs
     n_epoch = args.epochs
     l_rate = args.lr
-    if args.save == None:
-        save_epochs = 10
-    else:
-        save_epochs = args.save
+    save_epochs = args.save
     data_folder = Path(args.data_folder)
-
-    # batch_size = 4  # 4 for testing, 16 for training
-    # n_epoch = 10
-    # l_rate = 1e-5  #
-    # data_folder = r'C:\Users\sebas\Documents\MATLAB\DataProCiencia\DeepLearning'
 
     # Loading Data
     dataset = CustomDataset(data_folder/'train_overfit')
@@ -40,7 +32,7 @@ def main():
     print(f'Dataloader length: {len(train_loader)}')
 
     # DDPM noise schedule
-    time_steps = 1000
+    time_steps = 4000
     betas = gd.get_named_beta_schedule('linear', time_steps)
     diffusion = gd.SpacedDiffusion(
         use_timesteps = gd.space_timesteps(time_steps, section_counts=[time_steps]),
@@ -89,13 +81,13 @@ def main():
             y_pad = torch.cat((y_pert, torch.zeros((b, 1, pad_m, n), device=device)), dim=2)
             y_pad = torch.cat((y_pad, torch.zeros((b, 1, m + pad_m, pad_n),device=device)), dim=3)
 
-            # predicted_noise = nn_model(x_pad, y_pad, t)
-            # predicted_noise = predicted_noise[:, :, :m, :n]
-            #
-            # # loss is mean squared error between the predicted and true noise
-            # loss = func.mse_loss(predicted_noise, noise)
-            x_start = diffusion.p_mean_variance(nn_model, x_pad, y_pad, t)['pred_xstart'][:,:,:m,:n]
-            loss = func.mse_loss(x_start, y)
+            predicted_noise = nn_model(x_pad, y_pad, t)
+            predicted_noise = predicted_noise[:, :, :m, :n]
+
+            # loss is mean squared error between the predicted and true noise
+            loss = func.mse_loss(predicted_noise, noise)
+            # x_start = diffusion.p_mean_variance(nn_model, x_pad, y_pad, t)['pred_xstart'][:,:,:m,:n]
+            # loss = func.mse_loss(x_start, y)
             loss.backward()
 
             # nn.utils.clip_grad_norm_(nn_model.parameters(),0.5)
@@ -115,8 +107,10 @@ def get_args():
     parser.add_argument('epochs', type=int, help='number of epochs')
     parser.add_argument('lr', type=float, help='learning rate')
     parser.add_argument('-s', '--save', nargs='?', type=int, help='number of epochs to save', default=10)
-
-    return parser.parse_args() 
+    args = parser.parse_args()
+    if args.save == None:
+        args.save = 10
+    return args
 
 
 if __name__ == '__main__':
