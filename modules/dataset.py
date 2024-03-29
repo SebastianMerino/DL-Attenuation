@@ -23,8 +23,8 @@ def get_spectra(rf, fs, freq_L, freq_H, deltaF, blocksize, overlap_pc):
     
     nFFT = int((fs/deltaF))
     
-    wz = int(blocksize*wl*(1-overlap_pc)/dz ); # Between windows
-    nz = 2*int(blocksize*wl/dz /2 ); # Window size
+    wz = int(blocksize*wl*(1-overlap_pc)/dz ) # Between windows
+    nz = 2*int(blocksize*wl/dz /2 ) # Window size
 
     f,t,spgram = spectrogram(rf, fs=fs, window=('tukey', 0.25), nperseg=nz, noverlap=nz-wz, nfft=nFFT, axis=0)
     # spgram.shape

@@ -13,7 +13,7 @@ from modules.model import UNETv2
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights_overfit'/'v2'
+    save_dir = Path(os.getcwd())/'weights_overfit_linear'/'v2'
     if not os.path.exists(save_dir):
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -41,7 +41,7 @@ def main():
 
     # DDPM noise schedule
     time_steps = 1000
-    betas = gd.get_named_beta_schedule('cosine', time_steps)
+    betas = gd.get_named_beta_schedule('linear', time_steps)
     diffusion = gd.SpacedDiffusion(
         use_timesteps = gd.space_timesteps(time_steps, section_counts=[time_steps]),
         betas = betas,
@@ -57,7 +57,7 @@ def main():
 
     optim = torch.optim.Adam(nn_model.parameters(), lr=l_rate)
 
-    trained_epochs = 20000
+    trained_epochs = 0
     if trained_epochs > 0:
         nn_model.load_state_dict(torch.load(save_dir/f"model_{trained_epochs}.pth", map_location=device))  # From last model
         loss_arr = np.load(save_dir/f"loss_{trained_epochs}.npy").tolist()  # From last model
