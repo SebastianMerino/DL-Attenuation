@@ -13,7 +13,7 @@ from modules.model import UNETv2
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights_overfit_linear'/'v2'
+    save_dir = Path(os.getcwd())/'weights_overfit_test'/'v2'
     if not os.path.exists(save_dir):
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -89,11 +89,13 @@ def main():
             y_pad = torch.cat((y_pert, torch.zeros((b, 1, pad_m, n), device=device)), dim=2)
             y_pad = torch.cat((y_pad, torch.zeros((b, 1, m + pad_m, pad_n),device=device)), dim=3)
 
-            predicted_noise = nn_model(x_pad, y_pad, t)
-            predicted_noise = predicted_noise[:, :, :m, :n]
-
-            # loss is mean squared error between the predicted and true noise
-            loss = func.mse_loss(predicted_noise, noise)
+            # predicted_noise = nn_model(x_pad, y_pad, t)
+            # predicted_noise = predicted_noise[:, :, :m, :n]
+            #
+            # # loss is mean squared error between the predicted and true noise
+            # loss = func.mse_loss(predicted_noise, noise)
+            x_start = diffusion.p_mean_variance(nn_model, x_pad, y_pad, t)['pred_xstart'][:,:,:m,:n]
+            loss = func.mse_loss(x_start, y)
             loss.backward()
 
             # nn.utils.clip_grad_norm_(nn_model.parameters(),0.5)
