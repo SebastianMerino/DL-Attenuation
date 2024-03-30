@@ -13,7 +13,7 @@ from modules.model import UNETv2
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights_overfit'/'steps4k'
+    save_dir = Path(os.getcwd())/'weights_overfit'/'linear_500'
     if not os.path.exists(save_dir):
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -32,7 +32,7 @@ def main():
     print(f'Dataloader length: {len(train_loader)}')
 
     # DDPM noise schedule
-    time_steps = 4000
+    time_steps = 500
     betas = gd.get_named_beta_schedule('linear', time_steps)
     diffusion = gd.SpacedDiffusion(
         use_timesteps = gd.space_timesteps(time_steps, section_counts=[time_steps]),
