@@ -6,14 +6,14 @@ import numpy as np
 from torch.utils.data import DataLoader
 from datetime import datetime
 import torch.nn.functional as func
-import modules.guided_diffusion as gd
+from modules.guided_diffusion import create_gaussian_diffusion
 from modules.dataset import CustomDataset
 from modules.model import UNETv2
 
 def main():
     # network hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else torch.device('cpu'))
-    save_dir = Path(os.getcwd())/'weights_overfit'/'linear_500'
+    save_dir = Path(os.getcwd())/'weights_overfit'/'cosine_clip'
     if not os.path.exists(save_dir):
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -32,17 +32,9 @@ def main():
     print(f'Dataloader length: {len(train_loader)}')
 
     # DDPM noise schedule
-    time_steps = 500
-    betas = gd.get_named_beta_schedule('linear', time_steps)
-    diffusion = gd.SpacedDiffusion(
-        use_timesteps = gd.space_timesteps(time_steps, section_counts=[time_steps]),
-        betas = betas,
-        model_mean_type = gd.ModelMeanType.EPSILON,
-        model_var_type= gd.ModelVarType.FIXED_LARGE,
-        loss_type = gd.LossType.MSE,
-        rescale_timesteps = True,
-    )
-    
+    time_steps = 1000
+    diffusion = create_gaussian_diffusion(noise_schedule='cosine',steps=time_steps)
+
     # Model and optimizer
     nn_model = UNETv2(in_channels=80, residual=False, attention_res=[]).to(device)
     print("Num params: ", sum(p.numel() for p in nn_model.parameters() if p.requires_grad))
